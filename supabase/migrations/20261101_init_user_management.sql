@@ -59,6 +59,10 @@ $$;
 -- 4. Enable Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+-- Explicit Table Grants for Supabase Authenticated and Anon Roles
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO authenticated;
+GRANT SELECT ON public.profiles TO anon;
+
 -- 5. RLS Policies for Profiles
 -- 5a. SELECT: Users can view their own profile; Admins can view all profiles
 DROP POLICY IF EXISTS "profiles_select_own" ON public.profiles;
@@ -81,6 +85,10 @@ CREATE POLICY "profiles_insert_own"
     WITH CHECK (
         auth.uid() = id 
         AND role != 'admin' -- Prevent self-assigning admin role
+        AND (
+            (role IN ('doctor', 'hospital') AND account_status = 'pending')
+            OR (role = 'patient' AND account_status IN ('active', 'pending'))
+        )
     );
 
 DROP POLICY IF EXISTS "profiles_insert_admin" ON public.profiles;
@@ -94,7 +102,8 @@ DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
 CREATE POLICY "profiles_update_own"
     ON public.profiles
     FOR UPDATE
-    USING (auth.uid() = id);
+    USING (auth.uid() = id)
+    WITH CHECK (auth.uid() = id);
 
 DROP POLICY IF EXISTS "profiles_update_admin" ON public.profiles;
 CREATE POLICY "profiles_update_admin"
@@ -103,8 +112,15 @@ CREATE POLICY "profiles_update_admin"
     USING (public.is_admin())
     WITH CHECK (public.is_admin());
 
+-- 5d. DELETE: Admins can delete profiles
+DROP POLICY IF EXISTS "profiles_delete_admin" ON public.profiles;
+CREATE POLICY "profiles_delete_admin"
+    ON public.profiles
+    FOR DELETE
+    USING (public.is_admin());
+
 -- 6. Trigger to Prevent Privilege and Status Escalation
--- Ensures a non-admin user can NEVER modify their own role or account_status
+-- Ensures a non-admin user can NEVER modify their own role, account_status, id, or email
 CREATE OR REPLACE FUNCTION public.prevent_role_and_status_escalation()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -112,18 +128,27 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-    -- If invoking user is an active admin, allow all modifications
-    IF public.is_admin() THEN
+    -- Allow direct database operations (SQL editor, service_role, migrations) where auth.uid() is null,
+    -- or operations invoked by an active admin
+    IF auth.uid() IS NULL OR public.is_admin() THEN
         RETURN NEW;
     END IF;
 
-    -- Non-admin users cannot alter role or account_status
+    -- Non-admin authenticated users cannot alter role or account_status
     IF NEW.role IS DISTINCT FROM OLD.role THEN
         RAISE EXCEPTION 'Forbidden: You cannot modify your user role.';
     END IF;
 
     IF NEW.account_status IS DISTINCT FROM OLD.account_status THEN
         RAISE EXCEPTION 'Forbidden: You cannot modify your account status.';
+    END IF;
+
+    IF NEW.id IS DISTINCT FROM OLD.id THEN
+        RAISE EXCEPTION 'Forbidden: You cannot modify your user ID.';
+    END IF;
+
+    IF NEW.email IS DISTINCT FROM OLD.email THEN
+        RAISE EXCEPTION 'Forbidden: Direct email modification is restricted.';
     END IF;
 
     RETURN NEW;
@@ -200,4 +225,3 @@ CREATE TRIGGER on_auth_user_created
 -- ==============================================================================
 -- End of Migration
 -- ==============================================================================
-

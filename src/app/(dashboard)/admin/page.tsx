@@ -23,10 +23,14 @@ export default async function AdminDashboardPage() {
   const supabase = await createClient();
 
   // Fetch all profiles using Supabase (allowed by RLS is_admin() policy)
-  const { data: profiles } = await supabase
+  const { data: profiles, error: queryError } = await supabase
     .from("profiles")
     .select("*")
     .order("created_at", { ascending: false });
+
+  const isMigrationMissing =
+    queryError?.code === "PGRST205" ||
+    Boolean(queryError?.message?.includes("does not exist"));
 
   const allUsers: UserProfile[] = (profiles as UserProfile[]) || [];
 
@@ -36,6 +40,23 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* Migration Pending Notice */}
+      {isMigrationMissing && (
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 space-y-2 text-xs text-amber-200">
+          <div className="flex items-center gap-2 font-semibold text-amber-300 text-sm">
+            <ShieldAlert className="h-5 w-5 text-amber-400 shrink-0" />
+            <span>Database Setup Required: Table `profiles` Not Found</span>
+          </div>
+          <p>
+            The PostgreSQL migration has not been applied to your connected Supabase project yet.
+            Please open the Supabase SQL Editor and execute the script at:
+          </p>
+          <code className="block bg-slate-950/80 border border-amber-500/30 text-amber-300 p-2 rounded font-mono text-[11px]">
+            supabase/migrations/20261101_init_user_management.sql
+          </code>
+        </div>
+      )}
+
       {/* Top Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
         <div>

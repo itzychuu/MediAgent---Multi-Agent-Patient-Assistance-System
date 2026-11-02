@@ -45,7 +45,9 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/doctor") ||
     pathname.startsWith("/hospital") ||
     pathname.startsWith("/admin") ||
-    pathname.startsWith("/profile");
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/pending") ||
+    pathname.startsWith("/suspended");
 
   if (isProtectedPath && !user) {
     const url = request.nextUrl.clone();

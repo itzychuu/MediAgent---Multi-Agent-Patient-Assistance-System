@@ -1,5 +1,6 @@
 import React from "react";
 import { requireAuth } from "@/lib/auth/authorization";
+import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { ProfileForm } from "@/components/dashboard/ProfileForm";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
@@ -8,6 +9,14 @@ export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
   const user = await requireAuth();
+
+  if (user.account_status === "pending") {
+    redirect("/pending");
+  }
+
+  if (user.account_status === "suspended") {
+    redirect("/suspended");
+  }
 
   return (
     <DashboardShell user={user}>

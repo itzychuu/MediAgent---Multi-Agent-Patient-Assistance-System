@@ -75,8 +75,16 @@ export default function LoginForm() {
 
       if (profileError || !profile) {
         // Fallback to metadata if profile record is still synchronizing
-        const userRole = (authData.user.user_metadata?.role as UserProfile["role"]) || "patient";
-        router.push(getDashboardForRole(userRole));
+        const rawRole = (authData.user.user_metadata?.role as string) || "patient";
+        const sanitizedRole = ["patient", "doctor", "hospital"].includes(rawRole)
+          ? (rawRole as UserProfile["role"])
+          : "patient";
+
+        if (sanitizedRole === "doctor" || sanitizedRole === "hospital") {
+          router.push("/pending");
+        } else {
+          router.push(getDashboardForRole(sanitizedRole));
+        }
         router.refresh();
         return;
       }

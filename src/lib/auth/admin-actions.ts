@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { AccountStatus } from "@/types";
 import { revalidatePath } from "next/cache";
 
+const VALID_STATUSES: AccountStatus[] = ["active", "pending", "suspended"];
+
 /**
  * Server Action: Allows verified Administrator to update account status
  * (e.g., Approve a pending doctor/hospital or Suspend an account).
@@ -15,6 +17,14 @@ export async function updateUserAccountStatus(
 ) {
   // Enforces server-side administrator check
   const adminProfile = await requireAdmin();
+
+  if (!targetUserId || typeof targetUserId !== "string" || targetUserId.trim() === "") {
+    throw new Error("Invalid target user ID specified.");
+  }
+
+  if (!VALID_STATUSES.includes(newStatus)) {
+    throw new Error("Invalid account status specified.");
+  }
 
   if (targetUserId === adminProfile.id && newStatus === "suspended") {
     throw new Error("Administrators cannot suspend their own account.");
@@ -34,4 +44,3 @@ export async function updateUserAccountStatus(
   revalidatePath("/admin");
   return { success: true };
 }
-

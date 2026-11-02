@@ -32,6 +32,13 @@ export async function GET(request: Request) {
         if (profile?.role) {
           return NextResponse.redirect(`${origin}/${profile.role}`);
         }
+
+        // Fallback using user metadata if profile record is still provisioning
+        const metaRole = (user.user_metadata?.role as string) || "patient";
+        if (metaRole === "doctor" || metaRole === "hospital") {
+          return NextResponse.redirect(`${origin}/pending`);
+        }
+        return NextResponse.redirect(`${origin}/patient`);
       }
 
       return NextResponse.redirect(`${origin}${next}`);
