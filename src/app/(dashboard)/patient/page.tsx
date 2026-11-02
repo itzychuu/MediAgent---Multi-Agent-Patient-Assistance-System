@@ -125,24 +125,31 @@ export default async function PatientDashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Card 1: Disease Assessment */}
-          <Card className="hover:border-slate-700 transition">
-            <div className="flex items-start justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 border border-teal-500/30 text-teal-400">
-                <Stethoscope className="h-5 w-5" />
+          <Card className="hover:border-teal-500/50 bg-slate-900/80 transition flex flex-col justify-between">
+            <div>
+              <div className="flex items-start justify-between">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/15 border border-teal-500/30 text-teal-400">
+                  <Stethoscope className="h-5 w-5" />
+                </div>
+                <span className="rounded bg-teal-500/15 border border-teal-500/30 px-2 py-0.5 text-[10px] font-semibold text-teal-300">
+                  Phase 2 Active
+                </span>
               </div>
-              <span className="rounded bg-teal-500/10 px-2 py-0.5 text-[10px] font-semibold text-teal-400">
-                Phase 2
-              </span>
+              <h3 className="text-base font-semibold text-white mt-4">
+                AI Disease Assessment
+              </h3>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                Interactive triage interviews that evaluate symptoms, assess risk factors, and recommend immediate care steps.
+              </p>
             </div>
-            <h3 className="text-base font-semibold text-white mt-4">
-              AI Disease Assessment
-            </h3>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              Interactive triage interviews that evaluate symptoms, assess risk factors, and recommend immediate care steps.
-            </p>
-            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
-              <span>Agentic Assessment Pipeline</span>
-              <Sparkles className="h-3.5 w-3.5 text-teal-400/60" />
+            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+              <Link
+                href="/patient/assessment"
+                className="font-semibold text-teal-400 hover:text-teal-300 inline-flex items-center gap-1"
+              >
+                <span>Launch Assessment</span>
+                <Sparkles className="h-3.5 w-3.5" />
+              </Link>
             </div>
           </Card>
 

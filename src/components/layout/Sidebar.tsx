@@ -60,10 +60,9 @@ export function Sidebar({ user, isOpen, onClose }: SidebarProps) {
           },
           {
             title: "Symptom Assessment",
-            href: "#assessment",
+            href: "/patient/assessment",
             icon: Stethoscope,
-            badge: "Phase 2",
-            isPlaceholder: true,
+            badge: "Active",
           },
           {
             title: "Health Guidance",
